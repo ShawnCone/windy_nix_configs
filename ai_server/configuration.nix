@@ -51,9 +51,9 @@
       pandas
       scipy
       scikit-learn
-      pytorch-cuda
-      torchvision
-      tensorflow-cuda
+      pytorchWithCuda
+      torchvision-bin
+      tensorflow
       jupyter
       matplotlib
     ]))
