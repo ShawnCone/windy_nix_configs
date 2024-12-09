@@ -1,21 +1,19 @@
 { config, pkgs, ... }:
-
 {
   imports = [
     ./hardware-configuration.nix
   ];
-
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
   # File System Configuration
   fileSystems = {
     "/" = {
-      device = "/dev/disk/by-label/NIXROOT"; # Root partition
+      device = "/dev/disk/by-label/NIXROOT";
       fsType = "ext4";
     };
     "/boot" = {
-      device = "/dev/disk/by-label/NIXBOOT"; # EFI partition
+      device = "/dev/disk/by-label/NIXBOOT";
       fsType = "vfat";
     };
   };
@@ -31,16 +29,26 @@
     efi.canTouchEfiVariables = true;
   };
 
-  # NVIDIA Configuration
+  # NVIDIA and CUDA Configuration
   hardware.nvidia = {
     package = config.boot.kernelPackages.nvidiaPackages.stable;
     modesetting.enable = true;
-    cuda.enable = true;
+    open = false;
+    nvidiaSettings = true;
   };
+
+  # OpenGL Configuration
   hardware.opengl = {
     enable = true;
-    driSupport32Bit = true; # For CUDA support with 32-bit libraries
+    driSupport = true;
+    driSupport32Bit = true;
+    extraPackages = with pkgs; [
+      nvidia-vaapi-driver
+    ];
   };
+
+  # Enable CUDA support
+  nixpkgs.config.cudaSupport = true;
 
   # Services
   services = {
@@ -52,37 +60,38 @@
         PasswordAuthentication = false;
       };
     };
-
     # VSCode Server
     vscode-server.enable = true;
-
     # Network Management
     networkmanager.enable = true;
-
     # Firewall
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 ]; # SSH port
+      allowedTCPPorts = [ 22 ];
     };
   };
 
   # Python Environment
   environment.systemPackages = with pkgs; [
+    # Python and scientific computing libraries
     (python311.withPackages(ps: with ps; [
       pip
       numpy
       pandas
       scipy
       scikit-learn
-      pytorch
+      pytorch-cuda
       torchvision
-      tensorflow
+      tensorflow-cuda
       jupyter
       matplotlib
     ]))
+    # CUDA tools and libraries
     cudaPackages.cuda_cudart
     cudaPackages.cuda_cupti
     cudaPackages.cuda_nvcc
+    cudatoolkit
+    # Tools
     git
     vim
     vscode
@@ -93,13 +102,11 @@
   users.users.ai-user = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" ];
-    initialPassword = "changeme"; # Consider using hashed passwords or disabling entirely
     openssh.authorizedKeys.keys = [
-      # Replace this with your public SSH key
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFFg9hLkSMYG9Siy8oyNg6m1I94ZtNBy1kcYhfiW1xgR daveistanto@Daves-Toaster.local"
     ];
   };
 
-  # System Version (Ensure compatibility)
-  system.stateVersion = "24.11"; # Update this as you upgrade NixOS
+  # System Version
+  system.stateVersion = "24.11";
 }
