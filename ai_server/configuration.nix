@@ -45,18 +45,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    (python311.withPackages(ps: with ps; [
-      pip
-      numpy
-      pandas
-      scipy
-      scikit-learn
-      pytorchWithCuda
-      torchvision-bin
-      tensorflow
-      jupyter
-      matplotlib
-    ]))
+    python311
     cudaPackages.cuda_cudart
     cudaPackages.cuda_cupti
     cudaPackages.cuda_nvcc
