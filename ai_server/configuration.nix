@@ -60,8 +60,6 @@
         PasswordAuthentication = false;
       };
     };
-    # VSCode Server
-    vscode-server.enable = true;
   };
   
   # Network Configuration
@@ -98,7 +96,6 @@
     # Tools
     git
     vim
-    vscode
     openssh
   ];
 
