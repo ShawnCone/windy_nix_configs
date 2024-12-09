@@ -7,13 +7,11 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.cudaSupport = true;
 
-  # Bootloader Configuration
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
   };
 
-  # NVIDIA and CUDA Configuration
   hardware.nvidia = {
     package = config.boot.kernelPackages.nvidiaPackages.stable;
     modesetting.enable = true;
@@ -21,19 +19,13 @@
     nvidiaSettings = true;
   };
 
-  # OpenGL Configuration
   hardware.opengl = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
     extraPackages = with pkgs; [
       nvidia-vaapi-driver
     ];
   };
 
-  programs.nvidia-smi.enable = true;
-
-  # Services
   services = {
     openssh = {
       enable = true;
@@ -44,7 +36,6 @@
     };
   };
 
-  # Network Configuration
   networking = {
     networkmanager.enable = true;
     firewall = {
@@ -53,9 +44,7 @@
     };
   };
 
-  # Python and Development Environment
   environment.systemPackages = with pkgs; [
-    # Python and ML libraries
     (python311.withPackages(ps: with ps; [
       pip
       numpy
@@ -68,14 +57,12 @@
       jupyter
       matplotlib
     ]))
-    # CUDA tools and libraries
     cudaPackages.cuda_cudart
     cudaPackages.cuda_cupti
     cudaPackages.cuda_nvcc
     cudaPackages.cudnn
     cudaPackages.nccl
     cudatoolkit
-    # Development tools
     git
     vim
     openssh
@@ -84,7 +71,6 @@
     nvtop
   ];
 
-  # System Optimization for ML Workloads
   security.pam.loginLimits = [
     {
       domain = "*";
@@ -100,14 +86,12 @@
     }
   ];
 
-  # Automatic Garbage Collection
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 30d";
   };
 
-  # User Configuration
   users.users.ai-user = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" ];
