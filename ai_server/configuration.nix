@@ -64,11 +64,12 @@
     vscode-server.enable = true;
     # Network Management
     networkmanager.enable = true;
-    # Firewall
-    firewall = {
-      enable = true;
-      allowedTCPPorts = [ 22 ];
-    };
+  };
+  
+  # Firewall Configuration (moved from services.firewall to networking.firewall)
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];
   };
 
   # Python Environment
