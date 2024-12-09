@@ -1,93 +1,48 @@
 { config, pkgs, ... }:
+
 {
-  imports = [
-    ./hardware-configuration.nix
-  ];
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.cudaSupport = true;
+  networking.hostName = "nixos";
+  networking.networkmanager.enable = true;
 
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
-  };
-
-  hardware.nvidia = {
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-    modesetting.enable = true;
-    open = false;
-    nvidiaSettings = true;
-  };
-
-  hardware.opengl = {
+  # Enable SSH
+  services.openssh = {
     enable = true;
-    extraPackages = with pkgs; [
-      nvidia-vaapi-driver
-    ];
-  };
-
-  services = {
-    openssh = {
-      enable = true;
-      settings = {
-        PermitRootLogin = "no";
-        PasswordAuthentication = false;
-      };
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
     };
   };
 
-  networking = {
-    networkmanager.enable = true;
-    firewall = {
-      enable = true;
-      allowedTCPPorts = [ 22 ];
-    };
-  };
-
-  environment.systemPackages = with pkgs; [
-    python311
-    cudaPackages.cuda_cudart
-    cudaPackages.cuda_cupti
-    cudaPackages.cuda_nvcc
-    cudaPackages.cudnn
-    cudaPackages.nccl
-    cudatoolkit
-    git
-    vim
-    openssh
-    tmux
-    htop
-    nvtop
-  ];
-
-  security.pam.loginLimits = [
-    {
-      domain = "*";
-      type = "soft";
-      item = "nofile";
-      value = "unlimited";
-    }
-    {
-      domain = "*";
-      type = "hard";
-      item = "nofile";
-      value = "unlimited";
-    }
-  ];
-
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
-
+  # Create ai-user with SSH access
   users.users.ai-user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "video" ];
+    extraGroups = [ "wheel" "networkmanager" ];
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFFg9hLkSMYG9Siy8oyNg6m1I94ZtNBy1kcYhfiW1xgR daveistanto@Daves-Toaster.local"
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFFg9hLkSMYG9Siy8oyNg6m1I94ZtNBy1kcYhfiW1xgR daveistanto@Daves-Toaster.local"
     ];
+    hashedPassword = null;
   };
 
-  system.stateVersion = "24.11";
+  # NVIDIA Configuration
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.opengl.enable = true;
+  hardware.nvidia = {
+    package = config.boot.kernelPackages.nvidiaPackages.beta;
+    modesetting.enable = true;
+    powerManagement.enable = true;
+  };
+
+  # Install Python 3.11, CUDA and NVIDIA tools
+  environment.systemPackages = with pkgs; [
+    python311
+    cudaPackages.cuda_nvcc
+    cudaPackages.cuda_cudart
+    nvidia-docker
+    linuxPackages.nvidia_x11
+  ];
+
+  system.stateVersion = "23.11";
 }
