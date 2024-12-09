@@ -1,6 +1,18 @@
 { config, pkgs, ... }:
 
 {
+
+  fileSystems = {
+    "/" = {
+        device = "/dev/disk/by-label/NIXROOT";
+        fsType = "ext4";
+    };
+    "/boot" = {
+        device = "/dev/disk/by-label/NIXBOOT";
+        fsType = "vfat";
+    };
+  };
+  
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -30,9 +42,9 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.opengl.enable = true;
   hardware.nvidia = {
-    package = config.boot.kernelPackages.nvidiaPackages.beta;
+    open = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
     modesetting.enable = true;
-    powerManagement.enable = true;
   };
 
   # Install Python 3.11, CUDA and NVIDIA tools
