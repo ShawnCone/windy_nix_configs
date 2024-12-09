@@ -3,25 +3,9 @@
   imports = [
     ./hardware-configuration.nix
   ];
-  # Allow unfree packages
+
   nixpkgs.config.allowUnfree = true;
-
-  # File System Configuration
-  fileSystems = {
-    "/" = {
-      device = "/dev/disk/by-label/NIXROOT";
-      fsType = "ext4";
-    };
-    "/boot" = {
-      device = "/dev/disk/by-label/NIXBOOT";
-      fsType = "vfat";
-    };
-  };
-
-  # Swap File
-  swapDevices = [
-    { device = "/mnt/.swapfile"; }
-  ];
+  nixpkgs.config.cudaSupport = true;
 
   # Bootloader Configuration
   boot.loader = {
@@ -47,12 +31,10 @@
     ];
   };
 
-  # Enable CUDA support
-  nixpkgs.config.cudaSupport = true;
+  programs.nvidia-smi.enable = true;
 
   # Services
   services = {
-    # SSH Server
     openssh = {
       enable = true;
       settings = {
@@ -61,21 +43,19 @@
       };
     };
   };
-  
+
   # Network Configuration
   networking = {
-    # NetworkManager
     networkmanager.enable = true;
-    # Firewall
     firewall = {
       enable = true;
       allowedTCPPorts = [ 22 ];
     };
   };
 
-  # Python Environment
+  # Python and Development Environment
   environment.systemPackages = with pkgs; [
-    # Python and scientific computing libraries
+    # Python and ML libraries
     (python311.withPackages(ps: with ps; [
       pip
       numpy
@@ -92,12 +72,40 @@
     cudaPackages.cuda_cudart
     cudaPackages.cuda_cupti
     cudaPackages.cuda_nvcc
+    cudaPackages.cudnn
+    cudaPackages.nccl
     cudatoolkit
-    # Tools
+    # Development tools
     git
     vim
     openssh
+    tmux
+    htop
+    nvtop
   ];
+
+  # System Optimization for ML Workloads
+  security.pam.loginLimits = [
+    {
+      domain = "*";
+      type = "soft";
+      item = "nofile";
+      value = "unlimited";
+    }
+    {
+      domain = "*";
+      type = "hard";
+      item = "nofile";
+      value = "unlimited";
+    }
+  ];
+
+  # Automatic Garbage Collection
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
 
   # User Configuration
   users.users.ai-user = {
@@ -108,6 +116,5 @@
     ];
   };
 
-  # System Version
   system.stateVersion = "24.11";
 }
